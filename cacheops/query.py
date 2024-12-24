@@ -9,13 +9,15 @@ from django.utils.encoding import force_str
 from django.core.exceptions import ImproperlyConfigured, EmptyResultSet
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models.manager import BaseManager
+from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
+from django.db.transaction import atomic
+
+# This thing reappeared in Django 3.0
 try:
     from django.db.models.query import MAX_GET_RESULTS
     from django.db import connections
 except ImportError:
     MAX_GET_RESULTS = None
-from django.db.models.signals import pre_save, post_save, post_delete, m2m_changed
-from django.db.transaction import atomic
 
 from .conf import model_profile, settings, ALL_OPS
 from .utils import monkey_mix, stamp_fields, get_cache_key, cached_view_fab, family_has_profile
