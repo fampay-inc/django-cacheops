@@ -1,4 +1,4 @@
-import json
+import msgpack
 import threading
 from funcy import memoize, post_processing, ContextDecorator, decorator, walk_values
 from django.db import DEFAULT_DB_ALIAS
@@ -9,7 +9,6 @@ from .sharding import get_prefix
 from .redis import redis_client, handle_connection_failure, load_script
 from .signals import cache_invalidated
 from .transaction import queue_when_in_transaction
-import msgpack
 
 
 __all__ = ('invalidate_obj', 'invalidate_model', 'invalidate_all', 'no_invalidation')
