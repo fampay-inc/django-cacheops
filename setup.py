@@ -24,7 +24,7 @@ setup(
     ],
     python_requires='>=3.7',
     install_requires=[
-        'django>=3.2',
+        'django>=2.0',
         'redis>=3.0.0',
         'funcy>=1.8',
         'msgpack>=1.0.0'
@@ -41,6 +41,8 @@ setup(
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
         'Framework :: Django',
+        'Framework :: Django :: 2.1',
+        'Framework :: Django :: 2.2',
         'Framework :: Django :: 3.2',
         'Framework :: Django :: 4.0',
         'Framework :: Django :: 4.1',
