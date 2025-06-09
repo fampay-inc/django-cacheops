@@ -1,10 +1,10 @@
 local prefix = KEYS[1]
 local key = KEYS[2]
 local data = ARGV[1]
-local schemes = cjson.decode(ARGV[2])
-local conj_keys = cjson.decode(ARGV[3])
+local schemes = cmsgpack.unpack(ARGV[2])
+local conj_keys = cmsgpack.unpack(ARGV[3])
 local timeout = tonumber(ARGV[4])
-local rnd = ARGV[5]  -- A new value for empty stamps
+local rnd = ARGV[5] -- A new value for empty stamps
 local expected_checksum = ARGV[6]
 
 -- Ensure schemes are known

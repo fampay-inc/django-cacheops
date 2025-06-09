@@ -2,7 +2,7 @@ local prefix = KEYS[1]
 local key = KEYS[2]
 local precall_key = KEYS[3]
 local data = ARGV[1]
-local dnfs = cjson.decode(ARGV[2])
+local dnfs = cmsgpack.unpack(ARGV[2])
 local timeout = tonumber(ARGV[3])
 
 if precall_key ~= prefix and redis.call('exists', precall_key) == 0 then

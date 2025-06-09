@@ -6,3 +6,4 @@ build
 sqlite*.db
 .tox
 .cache
+.venv/
