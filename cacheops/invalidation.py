@@ -1,4 +1,4 @@
-import json
+import msgpack
 import threading
 from funcy import memoize, post_processing, ContextDecorator, decorator, walk_values
 from django.db import DEFAULT_DB_ALIAS
@@ -33,10 +33,10 @@ def invalidate_dict(model, obj_dict, using=DEFAULT_DB_ALIAS):
 
     if settings.CACHEOPS_INSIDEOUT:
         script = 'invalidate_insideout'
-        serialized_dict = json.dumps(walk_values(str, obj_dict))
+        serialized_dict = msgpack.packb(walk_values(str, obj_dict))
     else:
         script = 'invalidate'
-        serialized_dict = json.dumps(obj_dict, default=str)
+        serialized_dict = msgpack.packb(obj_dict, default=str)
     load_script(script)(keys=[prefix], args=[model._meta.db_table, serialized_dict])
     cache_invalidated.send(sender=model, obj_dict=obj_dict)
 
