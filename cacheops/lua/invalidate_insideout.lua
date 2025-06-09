@@ -1,8 +1,8 @@
 local prefix = KEYS[1]
 local db_table = ARGV[1]
-local obj = cjson.decode(ARGV[2])
+local obj = cmsgpack.unpack(ARGV[2])
 
-local conj_cache_key = function (db_table, scheme, obj)
+local conj_cache_key = function(db_table, scheme, obj)
     local parts = {}
     for field in string.gmatch(scheme, "[^,]+") do
         -- All obj values are strings, we still use tostring() in case obj does not contain field

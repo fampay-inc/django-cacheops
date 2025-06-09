@@ -27,6 +27,7 @@ setup(
         'django>=2.0',
         'redis>=3.0.0',
         'funcy>=1.8',
+        'msgpack>=1.0.0'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',

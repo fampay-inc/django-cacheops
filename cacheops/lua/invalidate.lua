@@ -1,6 +1,6 @@
 local prefix = KEYS[1]
 local db_table = ARGV[1]
-local obj = cjson.decode(ARGV[2])
+local obj = cmsgpack.unpack(ARGV[2])
 
 -- Utility functions
 local conj_cache_key = function (db_table, scheme, obj)

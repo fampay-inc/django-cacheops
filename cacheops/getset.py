@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 import hashlib
-import json
+import msgpack
 import random
 
 from .conf import settings
@@ -29,28 +29,28 @@ def cache_thing(prefix, cache_key, data, cond_dnfs, timeout, dbs=(), precall_key
     if settings.CACHEOPS_INSIDEOUT:
         schemes = dnfs_to_schemes(cond_dnfs)
         conj_keys = dnfs_to_conj_keys(prefix, cond_dnfs)
-        return load_script('cache_thing_insideout')(
+        return load_script("cache_thing_insideout")(
             keys=[prefix, cache_key],
             args=[
                 settings.CACHEOPS_SERIALIZER.dumps(data),
-                json.dumps(schemes),
-                json.dumps(conj_keys),
+                msgpack.dumps(schemes),
+                msgpack.dumps(conj_keys),
                 timeout,
                 # Need to pass it from here since random inside is not seeded in Redis pre 7.0
                 random.random(),
                 expected_checksum,
-            ]
+            ],
         )
     else:
         if prefix and precall_key == "":
             precall_key = prefix
-        load_script('cache_thing')(
+        load_script("cache_thing")(
             keys=[prefix, cache_key, precall_key],
             args=[
                 settings.CACHEOPS_SERIALIZER.dumps(data),
-                json.dumps(cond_dnfs, default=str),
-                timeout
-            ]
+                msgpack.dumps(cond_dnfs, default=str),
+                timeout,
+            ],
         )
 
 
@@ -76,14 +76,14 @@ def _read(key, cond_dnfs, prefix):
 
     conj_keys = dnfs_to_conj_keys(prefix, cond_dnfs)
     coded, *stamps = redis_client.mget(key, *conj_keys)
-    if coded is None or coded == b'LOCK':
+    if coded is None or coded == b"LOCK":
         return coded
 
     if None in stamps:
         redis_client.unlink(key)
         return None
 
-    stamp_checksum, data = coded.split(b':', 1)
+    stamp_checksum, data = coded.split(b":", 1)
     if stamp_checksum.decode() != join_stamps(stamps):
         redis_client.unlink(key)
         return None
@@ -100,14 +100,14 @@ def _get_or_lock(key, cond_dnfs, prefix):
         end
         return locked
     """)
-    signal_key = key + ':signal'
+    signal_key = key + ":signal"
 
     while True:
         data = _read(key, cond_dnfs, prefix)
         if data is None:
             if _lock(keys=[key, signal_key], args=[LOCK_TIMEOUT]):
                 return None
-        elif data != b'LOCK':
+        elif data != b"LOCK":
             return data
 
         # No data and not locked, wait
@@ -123,24 +123,32 @@ def _release_lock(key):
         redis.call('lpush', KEYS[2], 1)
         redis.call('expire', KEYS[2], 1)
     """)
-    signal_key = key + ':signal'
+    signal_key = key + ":signal"
     _unlock(keys=[key, signal_key])
 
 
 # Key manipulation helpers
 
+
 def join_stamps(stamps):
-    return hashlib.sha1(b' '.join(stamps)).hexdigest()
+    return hashlib.sha1(b" ".join(stamps)).hexdigest()
 
 
 def dnfs_to_conj_keys(prefix, cond_dnfs):
     def _conj_cache_key(table, conj):
-        conj_str = '&'.join(f'{field}={val}' for field, val in sorted(conj.items()))
-        return f'{prefix}conj:{table}:{conj_str}'
+        conj_str = "&".join(f"{field}={val}" for field, val in sorted(conj.items()))
+        return f"{prefix}conj:{table}:{conj_str}"
 
-    return [_conj_cache_key(table, conj) for table, disj in cond_dnfs.items()
-                                         for conj in disj]
+    return [
+        _conj_cache_key(table, conj)
+        for table, disj in cond_dnfs.items()
+        for conj in disj
+    ]
+
 
 def dnfs_to_schemes(cond_dnfs):
-    return {table: list({",".join(sorted(conj)) for conj in disj})
-            for table, disj in cond_dnfs.items() if disj}
+    return {
+        table: list({",".join(sorted(conj)) for conj in disj})
+        for table, disj in cond_dnfs.items()
+        if disj
+    }
