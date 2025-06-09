@@ -7,3 +7,4 @@ sqlite*.db
 .tox
 .cache
 .venv/
+djco/

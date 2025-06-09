@@ -9,6 +9,7 @@ from .sharding import get_prefix
 from .redis import redis_client, handle_connection_failure, load_script
 from .signals import cache_invalidated
 from .transaction import queue_when_in_transaction
+import msgpack
 
 
 __all__ = ('invalidate_obj', 'invalidate_model', 'invalidate_all', 'no_invalidation')
@@ -33,10 +34,10 @@ def invalidate_dict(model, obj_dict, using=DEFAULT_DB_ALIAS):
 
     if settings.CACHEOPS_INSIDEOUT:
         script = 'invalidate_insideout'
-        serialized_dict = json.dumps(walk_values(str, obj_dict))
+        serialized_dict = msgpack.packb(walk_values(str, obj_dict))
     else:
         script = 'invalidate'
-        serialized_dict = json.dumps(obj_dict, default=str)
+        serialized_dict = msgpack.packb(obj_dict, default=str)
     load_script(script)(keys=[prefix], args=[model._meta.db_table, serialized_dict])
     cache_invalidated.send(sender=model, obj_dict=obj_dict)
 
