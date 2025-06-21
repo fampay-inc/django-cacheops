@@ -28,6 +28,7 @@ from .tree import dnfs
 from .invalidation import invalidate_obj, invalidate_dict, skip_on_no_invalidation
 from .transaction import transaction_states
 from .signals import cache_read
+from .logger import log
 
 
 __all__ = ('cached_as', 'cached_view_as', 'install_cacheops')
@@ -159,6 +160,7 @@ class QuerySetMixin(object):
                 sql_str = sql % params
             except UnicodeDecodeError:
                 sql_str = sql % walk(force_str, params)
+            log.debug("sql_str=%s", sql_str)
             md.update(force_str(sql_str))
         except EmptyResultSet:
             pass

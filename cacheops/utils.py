@@ -1,16 +1,13 @@
 import re
 import json
 import inspect
-import logging
 from funcy import memoize, compose, wraps, any, any_fn, select_values, mapcat
 
 from django.db import models
 from django.http import HttpRequest
 
 from .conf import model_profile
-
-log = logging.getLogger("cacheops")
-log.warning("Init cacheops")
+from .logger import log
 
 def model_family(model):
     """
@@ -95,7 +92,7 @@ def obj_key(obj):
         return str(obj)
 
 def get_cache_key(*factors):
-    log.warning('Cache key factors: %s', factors)
+    log.warning("factors=%s", *factors)
     return md5hex(json.dumps(factors, sort_keys=True, default=obj_key))
 
 def cached_view_fab(_cached):

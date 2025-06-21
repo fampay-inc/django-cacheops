@@ -6,6 +6,7 @@ import random
 from .conf import settings
 from .redis import redis_client, handle_connection_failure, load_script
 from .transaction import transaction_states
+from .logger import log
 
 
 LOCK_TIMEOUT = 60
@@ -27,6 +28,7 @@ def cache_thing(prefix, cache_key, data, cond_dnfs, timeout, dbs=(), precall_key
         return
 
     if settings.CACHEOPS_INSIDEOUT:
+        log.debug("prefix=%s cache_key=%s cond_dnfs=%s", prefix, cache_key, cond_dnfs)
         schemes = dnfs_to_schemes(cond_dnfs)
         conj_keys = dnfs_to_conj_keys(prefix, cond_dnfs)
         return load_script("cache_thing_insideout")(
