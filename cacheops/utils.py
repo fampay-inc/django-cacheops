@@ -9,7 +9,7 @@ from django.http import HttpRequest
 
 from .conf import model_profile
 
-log = logging.getLogger()
+log = logging.getLogger("cacheops")
 
 def model_family(model):
     """
@@ -94,7 +94,7 @@ def obj_key(obj):
         return str(obj)
 
 def get_cache_key(*factors):
-    log.debug('Cache key factors: %s', *factors)
+    log.warning('Cache key factors: %s', factors)
     return md5hex(json.dumps(factors, sort_keys=True, default=obj_key))
 
 def cached_view_fab(_cached):
