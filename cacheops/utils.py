@@ -10,6 +10,7 @@ from django.http import HttpRequest
 from .conf import model_profile
 
 log = logging.getLogger("cacheops")
+log.warning("Init cacheops")
 
 def model_family(model):
     """
