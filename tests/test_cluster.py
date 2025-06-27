@@ -137,4 +137,4 @@ class RedisClusterTest(TestCase):
 
         # Verify key contains the proper tagging format
         self.assertEqual(len(keys), 1)
-        self.assertIn('{conj:test_table}:', keys[0])
+        self.assertIn('conj:{test_table}:', keys[0])

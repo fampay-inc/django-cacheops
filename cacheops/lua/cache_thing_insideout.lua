@@ -11,7 +11,7 @@ local expected_checksum = ARGV[6]
 -- Ensure schemes are known
 for db_table, _schemes in pairs(schemes) do
     -- Use key tagging for consistent hashing in Redis Cluster
-    redis.call('sadd', prefix .. '{conj:' .. db_table .. '}:schemes', unpack(_schemes))
+    redis.call('sadd', prefix .. 'schemes:{' .. db_table .. '}', unpack(_schemes))
 end
 
 -- Fill in invalidators and collect stamps

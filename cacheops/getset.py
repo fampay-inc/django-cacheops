@@ -148,8 +148,8 @@ def join_stamps(stamps):
 def dnfs_to_conj_keys(prefix, cond_dnfs):
     def _conj_cache_key(table, conj):
         conj_str = "&".join(f"{field}={val}" for field, val in sorted(conj.items()))
-        # Use key tagging with {conj:table} to ensure keys are in the same hash slot
-        return f"{prefix}{{conj:{table}}}:{conj_str}"
+        # Use key tagging with {table} to ensure keys are in the same hash slot
+        return f"{prefix}conj:{{{table}}}:{conj_str}"
 
     return [
         _conj_cache_key(table, conj)
