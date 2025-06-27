@@ -7,7 +7,6 @@ from django.db import models
 from django.http import HttpRequest
 
 from .conf import model_profile
-from .logger import log
 
 def model_family(model):
     """
@@ -92,7 +91,6 @@ def obj_key(obj):
         return str(obj)
 
 def get_cache_key(*factors):
-    log.warning("factors=%s", *factors)
     return md5hex(json.dumps(factors, sort_keys=True, default=obj_key))
 
 def cached_view_fab(_cached):
