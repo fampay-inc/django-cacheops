@@ -59,6 +59,7 @@ def cache_thing(prefix, cache_key, data, cond_dnfs, timeout, dbs=(), precall_key
 
 @contextmanager
 def getting(key, cond_dnfs, prefix, lock=False):
+    log.debug("key=%s prefix=%s", key, prefix)
     if not lock:
         yield _read(key, cond_dnfs, prefix)
     else:
