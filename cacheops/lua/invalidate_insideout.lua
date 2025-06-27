@@ -9,12 +9,13 @@ local conj_cache_key = function(db_table, scheme, obj)
         table.insert(parts, field .. '=' .. tostring(obj[field]))
     end
 
-    return prefix .. 'conj:' .. db_table .. ':' .. table.concat(parts, '&')
+    -- Use key tagging with {conj:table} to ensure keys are in the same hash slot in Redis Cluster
+    return prefix .. '{conj:' .. db_table .. '}:' .. table.concat(parts, '&')
 end
 
 -- Drop conj keys
 local conj_keys = {}
-local schemes = redis.call('smembers', prefix .. 'schemes:' .. db_table)
+local schemes = redis.call('smembers', prefix .. '{conj:' .. db_table .. '}:schemes')
 for _, scheme in ipairs(schemes) do
     redis.call('unlink', conj_cache_key(db_table, scheme, obj))
 end

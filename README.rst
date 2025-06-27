@@ -66,6 +66,27 @@ Setup redis connection and enable caching for desired models:
     # or with password (note a colon)
     CACHEOPS_REDIS = "redis://:password@localhost:6379/1"
 
+    # For AWS ElastiCache Redis Cluster or other Redis Cluster implementations
+    # Note: You MUST enable inside out mode when using Redis Cluster
+    CACHEOPS_INSIDEOUT = True
+    CACHEOPS_REDIS_CLUSTER = {
+        'startup_nodes': [
+            {'host': 'your-elasticache-cluster.amazonaws.com', 'port': 6379},
+            # Add more nodes if desired for connection resiliency
+        ],
+        # Connection options
+        'socket_timeout': 5,
+        'socket_connect_timeout': 5,
+        'retry_on_timeout': True,
+        'skip_full_coverage_check': True,  # Recommended for AWS ElastiCache
+        'decode_responses': False,  # Keep binary mode for cacheops
+        # Authentication (if configured)
+        'password': '...',  # Optional
+    }
+
+    # Alternatively, the cluster connection can be defined using a URL:
+    # CACHEOPS_REDIS_CLUSTER = "redis://your-elasticache-cluster.amazonaws.com:6379"
+
     # If you want to use sentinel, specify this variable
     CACHEOPS_SENTINEL = {
         'locations': [('localhost', 26379)], # sentinel locations, required

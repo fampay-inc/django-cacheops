@@ -4,12 +4,14 @@ local data = ARGV[1]
 local schemes = cmsgpack.unpack(ARGV[2])
 local conj_keys = cmsgpack.unpack(ARGV[3])
 local timeout = tonumber(ARGV[4])
+-- Note: all conj_keys should already be tagged with {conj:table} format for Redis Cluster
 local rnd = ARGV[5] -- A new value for empty stamps
 local expected_checksum = ARGV[6]
 
 -- Ensure schemes are known
 for db_table, _schemes in pairs(schemes) do
-    redis.call('sadd', prefix .. 'schemes:' .. db_table, unpack(_schemes))
+    -- Use key tagging for consistent hashing in Redis Cluster
+    redis.call('sadd', prefix .. '{conj:' .. db_table .. '}:schemes', unpack(_schemes))
 end
 
 -- Fill in invalidators and collect stamps

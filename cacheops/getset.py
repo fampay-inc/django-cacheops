@@ -2,6 +2,7 @@ from contextlib import contextmanager
 import hashlib
 import msgpack
 import random
+import redis
 
 from .conf import settings
 from .redis import redis_client, handle_connection_failure, load_script
@@ -77,7 +78,15 @@ def _read(key, cond_dnfs, prefix):
         return redis_client.get(key)
 
     conj_keys = dnfs_to_conj_keys(prefix, cond_dnfs)
-    coded, *stamps = redis_client.mget(key, *conj_keys)
+    try:
+        coded, *stamps = redis_client.mget(key, *conj_keys)
+    except redis.exceptions.ClusterError:
+        # Keys not in the same slot, fall back to individual GETs
+        coded = redis_client.get(key)
+        if coded is None or coded == b"LOCK":
+            return coded
+        stamps = [redis_client.get(conj_key) for conj_key in conj_keys]
+
     if coded is None or coded == b"LOCK":
         return coded
 
@@ -85,7 +94,7 @@ def _read(key, cond_dnfs, prefix):
         redis_client.unlink(key)
         return None
 
-    stamp_checksum, data = coded.split(b":", 1)
+    stamp_checksum, data = coded.split(b':', 1)
     if stamp_checksum.decode() != join_stamps(stamps):
         redis_client.unlink(key)
         return None
@@ -139,7 +148,8 @@ def join_stamps(stamps):
 def dnfs_to_conj_keys(prefix, cond_dnfs):
     def _conj_cache_key(table, conj):
         conj_str = "&".join(f"{field}={val}" for field, val in sorted(conj.items()))
-        return f"{prefix}conj:{table}:{conj_str}"
+        # Use key tagging with {conj:table} to ensure keys are in the same hash slot
+        return f"{prefix}{{conj:{table}}}:{conj_str}"
 
     return [
         _conj_cache_key(table, conj)

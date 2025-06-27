@@ -6,6 +6,11 @@ from django.utils.module_loading import import_string
 from funcy import decorator, identity, memoize, omit, LazyObject
 import redis
 from redis.sentinel import Sentinel
+try:
+    from redis.cluster import RedisCluster
+    REDIS_CLUSTER_AVAILABLE = True
+except ImportError:
+    REDIS_CLUSTER_AVAILABLE = False
 from .conf import settings
 
 
@@ -24,13 +29,35 @@ else:
 
 @LazyObject
 def redis_client():
-    if settings.CACHEOPS_REDIS and settings.CACHEOPS_SENTINEL:
-        raise ImproperlyConfigured("CACHEOPS_REDIS and CACHEOPS_SENTINEL are mutually exclusive")
+    # Check for mutually exclusive configurations
+    if sum(bool(x) for x in [settings.CACHEOPS_REDIS, settings.CACHEOPS_SENTINEL,
+                            settings.CACHEOPS_REDIS_CLUSTER]) > 1:
+        raise ImproperlyConfigured(
+            "CACHEOPS_REDIS, CACHEOPS_SENTINEL, and CACHEOPS_REDIS_CLUSTER are mutually exclusive")
 
+    # Redis Cluster configuration
+    if settings.CACHEOPS_REDIS_CLUSTER:
+        # Ensure inside out mode is enabled for cluster
+        if not settings.CACHEOPS_INSIDEOUT:
+            raise ImproperlyConfigured(
+                "CACHEOPS_INSIDEOUT must be set to True when using CACHEOPS_REDIS_CLUSTER")
+
+        if not REDIS_CLUSTER_AVAILABLE:
+            raise ImproperlyConfigured(
+                "Redis cluster support requires redis-py-cluster. Install it with pip install redis-py-cluster")
+
+        # Allow client connection settings to be specified by a URL or dict
+        if isinstance(settings.CACHEOPS_REDIS_CLUSTER, str):
+            return RedisCluster.from_url(settings.CACHEOPS_REDIS_CLUSTER)
+        else:
+            return RedisCluster(**settings.CACHEOPS_REDIS_CLUSTER)
+
+    # Standard Redis client configuration
     client_class = redis.Redis
     if settings.CACHEOPS_CLIENT_CLASS:
         client_class = import_string(settings.CACHEOPS_CLIENT_CLASS)
 
+    # Sentinel configuration
     if settings.CACHEOPS_SENTINEL:
         if not {'locations', 'service_name'} <= set(settings.CACHEOPS_SENTINEL):
             raise ImproperlyConfigured("Specify locations and service_name for CACHEOPS_SENTINEL")
@@ -44,7 +71,7 @@ def redis_client():
             db=settings.CACHEOPS_SENTINEL.get('db', 0)
         )
 
-    # Allow client connection settings to be specified by a URL.
+    # Standard Redis configuration
     if isinstance(settings.CACHEOPS_REDIS, str):
         return client_class.from_url(settings.CACHEOPS_REDIS)
     else:
