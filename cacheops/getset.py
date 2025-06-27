@@ -2,7 +2,6 @@ from contextlib import contextmanager
 import hashlib
 import msgpack
 import random
-import redis
 
 from .conf import settings
 from .redis import redis_client, handle_connection_failure, load_script
@@ -149,8 +148,7 @@ def join_stamps(stamps):
 def dnfs_to_conj_keys(prefix, cond_dnfs):
     def _conj_cache_key(table, conj):
         conj_str = "&".join(f"{field}={val}" for field, val in sorted(conj.items()))
-        # Use key tagging with {table} to ensure keys are in the same hash slot
-        return f"{prefix}conj:{{{table}}}:{conj_str}"
+        return f"{prefix}conj:{table}:{conj_str}"
 
     return [
         _conj_cache_key(table, conj)

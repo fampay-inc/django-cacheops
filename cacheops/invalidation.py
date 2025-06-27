@@ -63,8 +63,7 @@ def invalidate_model(model, using=DEFAULT_DB_ALIAS):
     # NOTE: if we use sharding dependent on DNF then this will fail,
     #       which is ok, since it's hard/impossible to predict all the shards
     prefix = get_prefix(tables=[model._meta.db_table], dbs=[using])
-    # Use pattern that works with both old format and new cluster-compatible format with key tagging
-    conjs_keys = redis_client.keys('%s*conj:%s:*' % (prefix, model._meta.db_table))
+    conjs_keys = redis_client.keys('%sconj:%s:*' % (prefix, model._meta.db_table))
     if conjs_keys:
         if settings.CACHEOPS_INSIDEOUT:
             redis_client.unlink(*conjs_keys)

@@ -84,8 +84,17 @@ Setup redis connection and enable caching for desired models:
         'password': '...',  # Optional
     }
 
+    # When using Redis Cluster, django-cacheops automatically adds hash tags to ensure
+    # that all cache keys for the same model are stored in the same Redis slot.
+    # For example, keys will be prefixed with {table_name}: to ensure consistency.
+
     # Alternatively, the cluster connection can be defined using a URL:
     # CACHEOPS_REDIS_CLUSTER = "redis://your-elasticache-cluster.amazonaws.com:6379"
+
+    # IMPORTANT: Redis Cluster Compatibility Notes:
+    # - All cache keys for the same model automatically use hash tags like {table_name}:
+    # - This ensures multi-key operations (MGET, etc.) work within the same model
+    # - No manual key management is required - it's handled automatically
 
     # If you want to use sentinel, specify this variable
     CACHEOPS_SENTINEL = {
